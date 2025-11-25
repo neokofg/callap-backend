@@ -2,21 +2,23 @@ package fiber
 
 import (
 	"github.com/gofiber/fiber/v2"
+	"github.com/neokofg/callap-backend/internal/application/service"
 	"github.com/neokofg/callap-backend/internal/infrastructure/http/fiber/handler"
+	"github.com/neokofg/callap-backend/internal/infrastructure/http/fiber/middleware"
 )
 
 type Routes struct {
 	handlers *handler.Handlers
 }
 
-func InitRoutes(fiberApp *fiber.App, handlers *handler.Handlers) *fiber.App {
+func InitRoutes(fiberApp *fiber.App, handlers *handler.Handlers, services *service.Services) *fiber.App {
 	routes := &Routes{
 		handlers: handlers,
 	}
 
 	v1 := fiberApp.Group("/api").Group("/v1")
 	routes.authRoutes(v1)
-	routes.userRoutes(v1)
+	routes.userRoutes(v1, services)
 
 	return fiberApp
 }
@@ -24,10 +26,10 @@ func InitRoutes(fiberApp *fiber.App, handlers *handler.Handlers) *fiber.App {
 func (r *Routes) authRoutes(fiberRouter fiber.Router) {
 	groupAuth := fiberRouter.Group("/auth")
 	groupAuth.Post("/register", r.handlers.AuthHandler.Register)
-	groupAuth.Post("/login")
+	groupAuth.Post("/login", r.handlers.AuthHandler.Login)
 }
 
-func (r *Routes) userRoutes(fiberRouter fiber.Router) {
-	groupUser := fiberRouter.Group("/user")
-	groupUser.Get("/me")
+func (r *Routes) userRoutes(fiberRouter fiber.Router, services *service.Services) {
+	groupUser := fiberRouter.Group("/user", middleware.AuthMiddleware(services.JWT))
+	groupUser.Get("/me", r.handlers.UserHandler.Me)
 }

@@ -1,6 +1,13 @@
 package validator
 
-import "github.com/go-playground/validator/v10"
+import (
+	"fmt"
+	"strings"
+
+	"github.com/go-playground/validator/v10"
+	"github.com/gofiber/fiber/v2"
+	"go.uber.org/zap"
+)
 
 type ErrorResponse struct {
 	Error       bool
@@ -13,7 +20,7 @@ type XValidator struct {
 	validator *validator.Validate
 }
 
-func Validate(data interface{}) []ErrorResponse {
+func Validate(c *fiber.Ctx, logger *zap.Logger, data interface{}) error {
 	validationErrors := []ErrorResponse{}
 	errs := validator.New().Struct(data)
 	if errs != nil {
@@ -26,5 +33,18 @@ func Validate(data interface{}) []ErrorResponse {
 			validationErrors = append(validationErrors, elem)
 		}
 	}
-	return validationErrors
+
+	if len(validationErrors) > 0 {
+		errMsgs := make([]string, 0, len(validationErrors))
+		for _, err := range validationErrors {
+			errMsgs = append(errMsgs, fmt.Sprintf("[%s]: %s", err.FailedField, err.Tag))
+		}
+		logger.Warn("Validation failed", zap.Strings("errors", errMsgs))
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
+			"success": false,
+			"errors":  strings.Join(errMsgs, ", "),
+		})
+	}
+
+	return nil
 }

@@ -1,13 +1,35 @@
 package handler
 
-import "go.uber.org/zap"
+import (
+	"github.com/gofiber/fiber/v2"
+	"github.com/neokofg/callap-backend/internal/application/service"
+	"go.uber.org/zap"
+)
 
 type UserHandler struct {
-	logger *zap.Logger
+	logger      *zap.Logger
+	userService *service.UserService
 }
 
-func NewUserHandler(logger *zap.Logger) *UserHandler {
+func NewUserHandler(userService *service.UserService, logger *zap.Logger) *UserHandler {
 	return &UserHandler{
-		logger: logger,
+		logger:      logger,
+		userService: userService,
 	}
+}
+
+func (uh *UserHandler) Me(c *fiber.Ctx) error {
+	userId, exists := c.Locals("userId").(string)
+	if !exists {
+		uh.logger.Warn("User ID required")
+		return fiber.NewError(fiber.StatusUnauthorized, "Invalid access token")
+	}
+
+	user, err := uh.userService.GetById(c.Context(), userId)
+	if err != nil {
+		uh.logger.Warn("User not found", zap.String("userId", userId), zap.Error(err))
+		return fiber.NewError(fiber.StatusNotFound, "User not found")
+	}
+
+	return c.Status(fiber.StatusOK).JSON(user)
 }

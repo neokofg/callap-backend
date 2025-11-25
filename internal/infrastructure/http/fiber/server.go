@@ -9,7 +9,6 @@ import (
 	"github.com/neokofg/callap-backend/internal/application/config"
 	"github.com/neokofg/callap-backend/internal/application/service"
 	"github.com/neokofg/callap-backend/internal/infrastructure/http/fiber/handler"
-	"github.com/neokofg/callap-backend/internal/infrastructure/http/fiber/middleware"
 	"go.uber.org/zap"
 )
 
@@ -20,7 +19,7 @@ type GlobalErrorHandlerResp struct {
 
 func InitFiber(cfg *config.Config, logger *zap.Logger, services *service.Services) {
 	fiberApp := fiber.New(fiber.Config{
-		Prefork:       true,
+		Prefork:       false, // TODO: set to true in production - neoko
 		CaseSensitive: false,
 		StrictRouting: false,
 		AppName:       cfg.Host,
@@ -41,18 +40,16 @@ func InitFiber(cfg *config.Config, logger *zap.Logger, services *service.Service
 		AllowOrigins:     "*",
 		AllowMethods:     "*",
 		AllowHeaders:     "*",
-		AllowCredentials: true,
+		AllowCredentials: false,
 	}))
 
 	fiberApp.Use(compress.New(compress.Config{
 		Level: compress.LevelBestSpeed,
 	}))
 
-	fiberApp.Use(middleware.ConfigMiddleware(cfg))
-
 	handlers := handler.NewHandlers(services, logger)
 
-	fiberApp = InitRoutes(fiberApp, handlers)
+	fiberApp = InitRoutes(fiberApp, handlers, services)
 
 	defer func(fiberApp *fiber.App) {
 		err := fiberApp.Shutdown()

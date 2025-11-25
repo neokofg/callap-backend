@@ -7,10 +7,12 @@ import (
 
 type Handlers struct {
 	AuthHandler *AuthHandler
+	UserHandler *UserHandler
 }
 
 func NewHandlers(services *service.Services, logger *zap.Logger) *Handlers {
 	return &Handlers{
-		AuthHandler: NewAuthHandler(services.JWT, services.UserService, logger),
+		AuthHandler: NewAuthHandler(services.JWT, services.UserService, services.PasswordService, logger),
+		UserHandler: NewUserHandler(services.UserService, logger),
 	}
 }

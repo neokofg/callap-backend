@@ -35,6 +35,8 @@ func NewUser(u User) User {
 
 	return User{
 		Id:           id,
+		Name:         u.Name,
+		Tag:          u.Tag,
 		Email:        u.Email,
 		Password:     u.Password,
 		CreatedAt:    createdAt,

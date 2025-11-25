@@ -27,9 +27,23 @@ func (us *UserService) GetById(c context.Context, id string) (entity.User, error
 	return us.repo.GetById(c, id)
 }
 
+func (us *UserService) GetByEmail(c context.Context, email string) (entity.User, error) {
+	c, cancel := context.WithTimeout(c, us.cTimeout)
+	defer cancel()
+
+	return us.repo.GetByEmail(c, email)
+}
+
 func (us *UserService) Create(c context.Context, user entity.User) (entity.User, error) {
 	c, cancel := context.WithTimeout(c, us.cTimeout)
 	defer cancel()
 
 	return us.repo.Create(c, user)
+}
+
+func (us *UserService) Update(c context.Context, user entity.User) (entity.User, error) {
+	c, cancel := context.WithTimeout(c, us.cTimeout)
+	defer cancel()
+
+	return us.repo.Update(c, user)
 }

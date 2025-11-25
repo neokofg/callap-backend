@@ -6,6 +6,7 @@ import (
 	"net/url"
 	"time"
 
+	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgxpool"
 )
 
@@ -24,6 +25,24 @@ type ConfigPool struct {
 	MaxConnLifeTime   int
 	MaxConnIdleTime   int
 	HealthCheckPeriod int
+}
+
+func Conn(config Config) (*pgx.Conn, error) {
+	password := url.QueryEscape(config.Password)
+	dsn := fmt.Sprintf(
+		"postgres://%s:%s@%s:%s/%s",
+		config.Username,
+		password,
+		config.Host,
+		config.Port,
+		config.Database,
+	)
+	conn, err := pgx.Connect(context.Background(), dsn)
+	if err != nil {
+		return nil, err
+	}
+
+	return conn, nil
 }
 
 func ConnPool(config Config) (*pgxpool.Pool, error) {

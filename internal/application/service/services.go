@@ -9,15 +9,17 @@ import (
 )
 
 type Services struct {
-	JWT         *jwt.Service
-	UserService *UserService
+	JWT             *jwt.Service
+	UserService     *UserService
+	PasswordService *PasswordService
 }
 
 func NewServices(cfg *config.Config, repositories *repository.Repositories) *Services {
 	c := time.Duration(cfg.ContextTimeout) * time.Second
 
 	return &Services{
-		JWT:         jwt.NewService(jwt.Config(cfg.JWT)),
-		UserService: NewUserService(c, repositories.UserRepository),
+		JWT:             jwt.NewService(jwt.Config(cfg.JWT)),
+		UserService:     NewUserService(c, repositories.UserRepository),
+		PasswordService: NewPasswordService(),
 	}
 }
