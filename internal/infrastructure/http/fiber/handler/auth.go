@@ -44,7 +44,7 @@ func (ah *AuthHandler) Login(c *fiber.Ctx) error {
 		return err
 	}
 
-	err = validator.Validate(c, ah.logger, req)
+	err = validator.Validate(ah.logger, req)
 	if err != nil {
 		return err
 	}
@@ -109,7 +109,7 @@ func (ah *AuthHandler) Register(c *fiber.Ctx) error {
 		return err
 	}
 
-	err = validator.Validate(c, ah.logger, req)
+	err = validator.Validate(ah.logger, req)
 	if err != nil {
 		return err
 	}

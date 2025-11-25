@@ -20,7 +20,7 @@ type XValidator struct {
 	validator *validator.Validate
 }
 
-func Validate(c *fiber.Ctx, logger *zap.Logger, data interface{}) error {
+func Validate(logger *zap.Logger, data interface{}) error {
 	validationErrors := []ErrorResponse{}
 	errs := validator.New().Struct(data)
 	if errs != nil {
@@ -40,10 +40,7 @@ func Validate(c *fiber.Ctx, logger *zap.Logger, data interface{}) error {
 			errMsgs = append(errMsgs, fmt.Sprintf("[%s]: %s", err.FailedField, err.Tag))
 		}
 		logger.Warn("Validation failed", zap.Strings("errors", errMsgs))
-		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
-			"success": false,
-			"errors":  strings.Join(errMsgs, ", "),
-		})
+		return fiber.NewError(fiber.StatusUnprocessableEntity, strings.Join(errMsgs, ", "))
 	}
 
 	return nil
