@@ -6,10 +6,11 @@ import (
 	"time"
 
 	"github.com/golang-jwt/jwt/v5"
+	"github.com/oklog/ulid/v2"
 )
 
 type Token struct {
-	UserId    string
+	UserId    ulid.ULID
 	ExpiresAt time.Time
 	IssuedAt  time.Time
 	Body      map[string]any
@@ -33,12 +34,12 @@ func NewService(config Config) *Service {
 }
 
 type jwtToken struct {
-	UserID string         `json:"user_id"`
+	UserID ulid.ULID      `json:"user_id"`
 	Body   map[string]any `json:"body,omitempty"`
 	jwt.RegisteredClaims
 }
 
-func (s *Service) GenerateToken(userID string, body map[string]any) (string, error) {
+func (s *Service) GenerateToken(userID ulid.ULID, body map[string]any) (string, error) {
 	ttl := s.config.AccessTokenTTL
 
 	if tokenType, ok := body["type"].(string); ok && tokenType == "refresh" {

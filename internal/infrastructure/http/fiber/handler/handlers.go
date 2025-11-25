@@ -11,6 +11,6 @@ type Handlers struct {
 
 func NewHandlers(services *service.Services, logger *zap.Logger) *Handlers {
 	return &Handlers{
-		AuthHandler: NewAuthHandler(services.JWT, logger),
+		AuthHandler: NewAuthHandler(services.JWT, services.UserService, logger),
 	}
 }

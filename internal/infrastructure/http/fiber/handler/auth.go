@@ -5,20 +5,24 @@ import (
 	"strings"
 
 	"github.com/gofiber/fiber/v2"
-	"github.com/neokofg/callap-backend/internal/application/context"
+	"github.com/neokofg/callap-backend/internal/application/service"
+	"github.com/neokofg/callap-backend/internal/domain/entity"
+	"github.com/neokofg/callap-backend/pkg/jwt"
 	"github.com/neokofg/callap-backend/pkg/validator"
 	"go.uber.org/zap"
 )
 
 type AuthHandler struct {
-	logger     *zap.Logger
-	jwtService context.JwtService
+	logger      *zap.Logger
+	jwtService  *jwt.Service
+	userService *service.UserService
 }
 
-func NewAuthHandler(jwtService context.JwtService, logger *zap.Logger) *AuthHandler {
+func NewAuthHandler(jwtService *jwt.Service, userService *service.UserService, logger *zap.Logger) *AuthHandler {
 	return &AuthHandler{
-		logger:     logger,
-		jwtService: jwtService,
+		logger:      logger,
+		jwtService:  jwtService,
+		userService: userService,
 	}
 }
 
@@ -51,5 +55,40 @@ func (ah *AuthHandler) Register(c *fiber.Ctx) error {
 		})
 	}
 
-	return c.Status(fiber.StatusOK).JSON()
+	var user = entity.User{
+		Name:     req.Name,
+		Password: req.Password,
+	}
+
+	user, err := ah.userService.Create(c.Context(), user)
+	if err != nil {
+		ah.logger.Error("Failed to create user", zap.Error(err))
+		return c.Status(fiber.StatusUnprocessableEntity).JSON(fiber.Map{
+			"success": false,
+			"errors":  err.Error(),
+		})
+	}
+
+	body := map[string]interface{}{
+		"name":       user.Name,
+		"tag":        user.Tag,
+		"created_at": user.CreatedAt,
+		"updated_at": user.UpdatedAt,
+	}
+
+	token, err := ah.jwtService.GenerateToken(user.Id, body)
+	if err != nil {
+		ah.logger.Error("Failed to generate token", zap.Error(err))
+		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
+			"success": false,
+			"errors":  err.Error(),
+		})
+	}
+
+	return c.Status(fiber.StatusOK).JSON(fiber.Map{
+		"success": true,
+		"data": fiber.Map{
+			"token": token,
+		},
+	})
 }
