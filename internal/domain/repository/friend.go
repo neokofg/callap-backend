@@ -90,7 +90,7 @@ func (fr *FriendRepository) Delete(c context.Context, userId string, friendId st
 			return err
 		}
 		query = fmt.Sprintf(
-			"DELETE FROM %s WHERE user_id = $2 AND friend_id = $1",
+			"DELETE FROM %s WHERE user_id = $1 AND friend_id = $2",
 			fr.tableName,
 		)
 		_, err = tx.Exec(c, query, friendId, userId)
@@ -224,7 +224,7 @@ func (fr *FriendRepository) AddFriend(c context.Context, userId string, friendId
 				"UPDATE %s SET status = 'pending', updated_at = CURRENT_TIMESTAMP AT TIME ZONE 'UTC' WHERE user_id = $1 AND friend_id = $2",
 				fr.tableName,
 			)
-			_, err = tx.Exec(c, query, parsedUserId, parsedFriendId)
+			_, err = tx.Exec(c, query, parsedUserId.String(), parsedFriendId.String())
 			if err != nil {
 				return err
 			}

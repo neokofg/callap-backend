@@ -36,7 +36,7 @@ func NewUser(u User) User {
 }
 
 type FriendUser struct {
-	Id   ulid.ULID
-	Name string
-	Tag  string
+	Id   ulid.ULID `json:"id"`
+	Name string    `json:"name"`
+	Tag  string    `json:"tag"`
 }

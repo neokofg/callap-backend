@@ -187,6 +187,10 @@ func (fh *FriendHandler) AddFriend(c *fiber.Ctx) error {
 		return fiber.NewError(fiber.StatusNotFound, "User not found")
 	}
 
+	if userFriend.Id.String() == userId {
+		return fiber.NewError(fiber.StatusUnprocessableEntity, "Cannot add yourself")
+	}
+
 	err = fh.friendService.AddFriend(c.Context(), userId, userFriend.Id.String())
 	if err != nil {
 		return err
