@@ -20,6 +20,13 @@ func NewUserService(cTimeout time.Duration, repo *repository.UserRepository) *Us
 	}
 }
 
+func (us *UserService) GetByNameTag(c context.Context, nametag string) (entity.User, error) {
+	c, cancel := context.WithTimeout(c, us.cTimeout)
+	defer cancel()
+
+	return us.repo.GetByNameTag(c, nametag)
+}
+
 func (us *UserService) GetById(c context.Context, id string) (entity.User, error) {
 	c, cancel := context.WithTimeout(c, us.cTimeout)
 	defer cancel()

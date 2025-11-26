@@ -18,16 +18,6 @@ type User struct {
 }
 
 func NewUser(u User) User {
-	createdAt := time.Now()
-	if !u.CreatedAt.IsZero() {
-		createdAt = u.CreatedAt
-	}
-
-	updatedAt := time.Now()
-	if !u.UpdatedAt.IsZero() {
-		updatedAt = u.UpdatedAt
-	}
-
 	id := ulid.Make()
 	if u.Id != ulid.Zero {
 		id = u.Id
@@ -39,8 +29,14 @@ func NewUser(u User) User {
 		Tag:          u.Tag,
 		Email:        u.Email,
 		Password:     u.Password,
-		CreatedAt:    createdAt,
-		UpdatedAt:    updatedAt,
+		CreatedAt:    u.CreatedAt,
+		UpdatedAt:    u.UpdatedAt,
 		RefreshToken: u.RefreshToken,
 	}
+}
+
+type FriendUser struct {
+	Id   ulid.ULID
+	Name string
+	Tag  string
 }

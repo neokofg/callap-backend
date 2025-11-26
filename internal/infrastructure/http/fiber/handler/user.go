@@ -3,6 +3,7 @@ package handler
 import (
 	"github.com/gofiber/fiber/v2"
 	"github.com/neokofg/callap-backend/internal/application/service"
+	"github.com/neokofg/callap-backend/internal/infrastructure/http/fiber/utils"
 	"go.uber.org/zap"
 )
 
@@ -31,5 +32,5 @@ func (uh *UserHandler) Me(c *fiber.Ctx) error {
 		return fiber.NewError(fiber.StatusNotFound, "User not found")
 	}
 
-	return c.Status(fiber.StatusOK).JSON(user)
+	return c.Status(fiber.StatusOK).JSON(utils.MakeSuccessResponseWithData(user))
 }

@@ -32,4 +32,15 @@ func (r *Routes) authRoutes(fiberRouter fiber.Router) {
 func (r *Routes) userRoutes(fiberRouter fiber.Router, services *service.Services) {
 	groupUser := fiberRouter.Group("/user", middleware.AuthMiddleware(services.JWT))
 	groupUser.Get("/me", r.handlers.UserHandler.Me)
+	r.friendRoutes(groupUser, services)
+}
+
+func (r *Routes) friendRoutes(fiberRouter fiber.Router, services *service.Services) {
+	groupFriend := fiberRouter.Group("/friend")
+	groupFriend.Post("/add", r.handlers.FriendHandler.AddFriend)
+	groupFriend.Get("/pending", r.handlers.FriendHandler.GetPending)
+	groupFriend.Post("/accept", r.handlers.FriendHandler.Accept)
+	groupFriend.Post("/decline", r.handlers.FriendHandler.Decline)
+	groupFriend.Delete("/delete", r.handlers.FriendHandler.Delete)
+	groupFriend.Get("/list", r.handlers.FriendHandler.List)
 }

@@ -12,6 +12,7 @@ type Services struct {
 	JWT             *jwt.Service
 	UserService     *UserService
 	PasswordService *PasswordService
+	FriendService   *FriendService
 }
 
 func NewServices(cfg *config.Config, repositories *repository.Repositories) *Services {
@@ -21,5 +22,6 @@ func NewServices(cfg *config.Config, repositories *repository.Repositories) *Ser
 		JWT:             jwt.NewService(jwt.Config(cfg.JWT)),
 		UserService:     NewUserService(c, repositories.UserRepository),
 		PasswordService: NewPasswordService(),
+		FriendService:   NewFriendService(c, repositories.FriendRepository),
 	}
 }

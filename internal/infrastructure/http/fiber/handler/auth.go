@@ -3,8 +3,8 @@ package handler
 import (
 	"github.com/gofiber/fiber/v2"
 	"github.com/neokofg/callap-backend/internal/application/service"
-	"github.com/neokofg/callap-backend/internal/application/utils"
 	"github.com/neokofg/callap-backend/internal/domain/entity"
+	"github.com/neokofg/callap-backend/internal/infrastructure/http/fiber/utils"
 	"github.com/neokofg/callap-backend/pkg/jwt"
 	"github.com/neokofg/callap-backend/pkg/validator"
 	"go.uber.org/zap"
@@ -86,13 +86,10 @@ func (ah *AuthHandler) Login(c *fiber.Ctx) error {
 		return fiber.NewError(fiber.StatusUnprocessableEntity, "Failed to update user")
 	}
 
-	return c.Status(fiber.StatusOK).JSON(fiber.Map{
-		"success": true,
-		"data": fiber.Map{
-			"access_token":  token,
-			"refresh_token": refreshToken,
-		},
-	})
+	return c.Status(fiber.StatusOK).JSON(utils.MakeSuccessResponseWithData(fiber.Map{
+		"access_token":  token,
+		"refresh_token": refreshToken,
+	}))
 }
 
 type RegisterRequest struct {
@@ -172,11 +169,8 @@ func (ah *AuthHandler) Register(c *fiber.Ctx) error {
 		})
 	}
 
-	return c.Status(fiber.StatusOK).JSON(fiber.Map{
-		"success": true,
-		"data": fiber.Map{
-			"access_token":  token,
-			"refresh_token": refreshToken,
-		},
-	})
+	return c.Status(fiber.StatusOK).JSON(utils.MakeSuccessResponseWithData(fiber.Map{
+		"access_token":  token,
+		"refresh_token": refreshToken,
+	}))
 }

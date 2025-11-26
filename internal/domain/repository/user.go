@@ -2,7 +2,9 @@ package repository
 
 import (
 	"context"
+	"errors"
 	"fmt"
+	"strings"
 
 	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/neokofg/callap-backend/internal/domain/entity"
@@ -18,6 +20,26 @@ func NewUserRepository(pool *pgxpool.Pool) *UserRepository {
 		pool:      pool,
 		tableName: userTableName,
 	}
+}
+
+func (ur *UserRepository) GetByNameTag(c context.Context, nametag string) (entity.User, error) {
+	var user entity.User
+	name, tag, found := strings.Cut(nametag, "#")
+	if !found {
+		return entity.User{}, errors.New("invalid nametag")
+	}
+
+	query := fmt.Sprintf(
+		"SELECT id, name, tag, email, created_at, updated_at FROM %s WHERE name = $1 AND tag = $2",
+		ur.tableName,
+	)
+
+	err := ur.pool.QueryRow(c, query, name, tag).
+		Scan(&user.Id, &user.Name, &user.Tag, &user.Email, &user.CreatedAt, &user.UpdatedAt)
+	if err != nil {
+		return entity.User{}, err
+	}
+	return user, nil
 }
 
 func (ur *UserRepository) GetById(c context.Context, id string) (entity.User, error) {
