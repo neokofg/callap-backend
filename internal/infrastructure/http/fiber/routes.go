@@ -33,6 +33,7 @@ func (r *Routes) userRoutes(fiberRouter fiber.Router, services *service.Services
 	groupUser := fiberRouter.Group("/user", middleware.AuthMiddleware(services.JWT))
 	groupUser.Get("/me", r.handlers.UserHandler.Me)
 	r.friendRoutes(groupUser, services)
+	r.conversationRoutes(groupUser, services)
 }
 
 func (r *Routes) friendRoutes(fiberRouter fiber.Router, services *service.Services) {
@@ -42,5 +43,21 @@ func (r *Routes) friendRoutes(fiberRouter fiber.Router, services *service.Servic
 	groupFriend.Post("/accept", r.handlers.FriendHandler.Accept)
 	groupFriend.Post("/decline", r.handlers.FriendHandler.Decline)
 	groupFriend.Delete("/delete", r.handlers.FriendHandler.Delete)
-	groupFriend.Get("/list", r.handlers.FriendHandler.List)
+	groupFriend.Get("/list", r.handlers.FriendHandler.ListFriends)
+}
+
+func (r *Routes) conversationRoutes(fiberRouter fiber.Router, services *service.Services) {
+	groupConversation := fiberRouter.Group("/conversation")
+	groupConversation.Post("/getOrCreate", r.handlers.ConversationHandler.GetOrCreate)
+	groupConversation.Get("/list", r.handlers.ConversationHandler.ListConversations)
+	groupConversation.Get("/get", r.handlers.ConversationHandler.GetConversation)
+	groupConversation.Post("/hide", r.handlers.ConversationHandler.Hide)
+	r.messageRoutes(groupConversation, services)
+}
+
+func (r *Routes) messageRoutes(fiberRouter fiber.Router, services *service.Services) {
+	groupMessage := fiberRouter.Group("/message")
+	groupMessage.Get("/list", r.handlers.ConversationHandler.ListMessages)
+	groupMessage.Post("/new", r.handlers.ConversationHandler.NewMessage)
+	groupMessage.Delete("/delete", r.handlers.ConversationHandler.DeleteMessage)
 }

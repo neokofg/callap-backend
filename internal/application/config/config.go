@@ -15,6 +15,7 @@ type Config struct {
 	Port           string     `env:"PORT"            env-required:"true"`
 	JWT            JWT        `                      env-required:"true" env-prefix:"JWT_"`
 	PostgreSQL     PostgreSQL `                      env-required:"true" env-prefix:"POSTGRES_"`
+	Redis          Redis      `                      env-required:"true" env-prefix:"REDIS_"`
 }
 
 type JWT struct {
@@ -39,4 +40,10 @@ type PostgreSQLPool struct {
 	MaxConnLifeTime   int `env:"MAX_CONN_LIFE_TIME"  env-required:"true"`
 	MaxConnIdleTime   int `env:"MAX_CONN_IDLE_TIME"  env-required:"true"`
 	HealthCheckPeriod int `env:"HEALTH_CHECK_PERIOD" env-required:"true"`
+}
+
+type Redis struct {
+	Host     string `env:"HOST" env-required:"true"`
+	Password string `env:"PASSWORD" env-required:"true"`
+	DB       int    `env:"DB" env-required:"true"`
 }

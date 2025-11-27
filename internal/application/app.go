@@ -8,6 +8,7 @@ import (
 	"github.com/neokofg/callap-backend/internal/application/config"
 	"github.com/neokofg/callap-backend/internal/application/service"
 	"github.com/neokofg/callap-backend/internal/domain/repository"
+	"github.com/neokofg/callap-backend/internal/infrastructure/cache/redis"
 	"github.com/neokofg/callap-backend/internal/infrastructure/database/postgresql"
 	"github.com/neokofg/callap-backend/internal/infrastructure/http/fiber"
 	"go.uber.org/zap"
@@ -33,9 +34,14 @@ func Run(cfg *config.Config, logger *zap.Logger) {
 	if err != nil {
 		logger.Fatal("failed to connect to database", zap.Error(err))
 	}
+	logger.Info("database connected")
+	rdb, err := redis.Conn()
+	if err != nil {
+		logger.Fatal("failed to connect to redis", zap.Error(err))
+	}
+	logger.Info("redis connected")
 
-	repositories := repository.NewRepositories(pool)
-
+	repositories := repository.NewRepositories(pool, rdb)
 	services := service.NewServices(cfg, repositories)
 
 	fiber.InitFiber(cfg, logger, services)

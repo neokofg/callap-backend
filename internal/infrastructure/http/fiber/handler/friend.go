@@ -27,7 +27,7 @@ type ListRequest struct {
 	Offset int `query:"offset" validate:"omitempty,gt=0"`
 }
 
-func (fh *FriendHandler) List(c *fiber.Ctx) error {
+func (fh *FriendHandler) ListFriends(c *fiber.Ctx) error {
 	userId, exists := c.Locals("userId").(string)
 	if !exists {
 		fh.logger.Warn("User ID required")
