@@ -10,6 +10,7 @@ type Handlers struct {
 	UserHandler         *UserHandler
 	FriendHandler       *FriendHandler
 	ConversationHandler *ConversationHandler
+	WebsocketHandler    *WebsocketHandler
 }
 
 func NewHandlers(services *service.Services, logger *zap.Logger) *Handlers {
@@ -18,5 +19,6 @@ func NewHandlers(services *service.Services, logger *zap.Logger) *Handlers {
 		UserHandler:         NewUserHandler(services.UserService, logger),
 		FriendHandler:       NewFriendHandler(services.FriendService, services.UserService, logger),
 		ConversationHandler: NewConversationHandler(services.ConversationService, logger),
+		WebsocketHandler:    NewWebsocketHandler(services.WebsocketService, logger),
 	}
 }

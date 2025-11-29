@@ -19,8 +19,17 @@ func InitRoutes(fiberApp *fiber.App, handlers *handler.Handlers, services *servi
 	v1 := fiberApp.Group("/api").Group("/v1")
 	routes.authRoutes(v1)
 	routes.userRoutes(v1, services)
+	routes.websocketRoute(fiberApp, services)
 
 	return fiberApp
+}
+
+func (r *Routes) websocketRoute(fiberRouter fiber.Router, services *service.Services) {
+	groupWs := fiberRouter.Group("/ws",
+		middleware.WebsocketMiddleware(),
+		middleware.AuthMiddleware(services.JWT),
+	)
+	groupWs.Get("/connect", r.handlers.WebsocketHandler.Connect())
 }
 
 func (r *Routes) authRoutes(fiberRouter fiber.Router) {

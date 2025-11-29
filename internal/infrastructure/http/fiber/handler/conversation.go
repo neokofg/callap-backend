@@ -108,12 +108,12 @@ func (ch *ConversationHandler) NewMessage(c *fiber.Ctx) error {
 		return err
 	}
 
-	err = ch.conversationService.NewMessage(c.Context(), userId, req.Id, req.Content)
+	msg, err := ch.conversationService.NewMessage(c.Context(), userId, req.Id, req.Content)
 	if err != nil {
 		return err
 	}
 
-	return c.Status(fiber.StatusOK).JSON(utils.MakeSuccessResponse())
+	return c.Status(fiber.StatusOK).JSON(utils.MakeSuccessResponseWithData(msg))
 }
 
 type HideConversationRequest struct {

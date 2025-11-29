@@ -3,7 +3,6 @@ package fiber
 import (
 	"github.com/bytedance/sonic"
 	"github.com/gofiber/fiber/v2"
-	"github.com/gofiber/fiber/v2/middleware/compress"
 	"github.com/gofiber/fiber/v2/middleware/cors"
 	"github.com/gofiber/fiber/v2/middleware/helmet"
 	"github.com/neokofg/callap-backend/internal/application/config"
@@ -43,9 +42,9 @@ func InitFiber(cfg *config.Config, logger *zap.Logger, services *service.Service
 		AllowCredentials: false,
 	}))
 
-	fiberApp.Use(compress.New(compress.Config{
-		Level: compress.LevelBestSpeed,
-	}))
+	//fiberApp.Use(compress.New(compress.Config{
+	//	Level: compress.LevelDisabled,
+	//}))
 
 	handlers := handler.NewHandlers(services, logger)
 

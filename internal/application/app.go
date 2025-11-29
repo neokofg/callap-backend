@@ -42,7 +42,7 @@ func Run(cfg *config.Config, logger *zap.Logger) {
 	logger.Info("redis connected")
 
 	repositories := repository.NewRepositories(pool, rdb)
-	services := service.NewServices(cfg, repositories)
+	services := service.NewServices(cfg, repositories, logger)
 
 	fiber.InitFiber(cfg, logger, services)
 

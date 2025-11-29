@@ -31,6 +31,39 @@ func NewConversationRepository(pool *pgxpool.Pool, rdb *redis.Client) *Conversat
 	}
 }
 
+func (cr *ConversationRepository) GetParticipants(c context.Context, id string) ([]entity.ConversationParticipant, error) {
+	rows, err := cr.pool.Query(c, `
+        SELECT cp.id, cp.conversation_id, cp.user_id, cp.joined_at 
+        FROM conversation_participants cp
+        WHERE cp.conversation_id = $1 AND cp.left_at IS NULL
+        ORDER BY cp.joined_at
+    `, id)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	var participants []entity.ConversationParticipant
+	for rows.Next() {
+		var cp entity.ConversationParticipant
+		var idStr, convIdStr, userIdStr string
+		var joinedAt time.Time
+		err := rows.Scan(&idStr, &convIdStr, &userIdStr, &joinedAt)
+		if err != nil {
+			return nil, err
+		}
+		cp.Id = ulid.MustParse(idStr)
+		cp.ConversationId = ulid.MustParse(convIdStr)
+		cp.UserId = ulid.MustParse(userIdStr)
+		cp.JoinedAt = joinedAt
+		participants = append(participants, cp)
+	}
+	if err = rows.Err(); err != nil {
+		return nil, err
+	}
+	return participants, nil
+}
+
 func (cr *ConversationRepository) ListMessages(c context.Context, userId string, id string, limit int, offset int) ([]entity.Message, error) {
 	if limit <= 0 || limit > 100 {
 		limit = 50
@@ -46,7 +79,8 @@ func (cr *ConversationRepository) ListMessages(c context.Context, userId string,
             u.name AS sender_name,
             m.content,
             m.created_at,
-            m.is_read
+            m.is_read,
+			m.conversation_id
         FROM messages m
         JOIN users u ON m.sender_id = u.id
         WHERE m.conversation_id = $1
@@ -65,13 +99,13 @@ func (cr *ConversationRepository) ListMessages(c context.Context, userId string,
 	var messages []entity.Message
 	for rows.Next() {
 		var msg entity.Message
-		err := rows.Scan(&msg.ID, &msg.SenderID, &msg.SenderName, &msg.Content, &msg.CreatedAt, &msg.IsRead)
+		err = rows.Scan(&msg.ID, &msg.SenderID, &msg.SenderName, &msg.Content, &msg.CreatedAt, &msg.IsRead, &msg.ConversationId)
 		if err != nil {
 			return nil, err
 		}
 		messages = append(messages, msg)
 	}
-	if err := rows.Err(); err != nil {
+	if err = rows.Err(); err != nil {
 		return nil, err
 	}
 	return messages, nil
@@ -94,26 +128,28 @@ func (cr *ConversationRepository) DeleteMessage(c context.Context, userId string
 	return tx.Commit(c)
 }
 
-func (cr *ConversationRepository) NewMessage(c context.Context, userId string, id string, content string) error {
+func (cr *ConversationRepository) NewMessage(c context.Context, userId string, id string, content string) (*entity.Message, error) {
 	tx, err := cr.pool.Begin(c)
 	if err != nil {
-		return err
+		return nil, err
 	}
 	defer tx.Rollback(c)
+
+	messageId := ulid.Make().String()
 
 	_, err = tx.Exec(c, `
         INSERT INTO messages (id, conversation_id, sender_id, content) 
         VALUES ($1, $2, $3, $4)
-    `, ulid.Make().String(), id, userId, content)
+    `, messageId, id, userId, content)
 	if err != nil {
-		return err
+		return nil, err
 	}
 
 	_, err = tx.Exec(c, `
         UPDATE conversations SET updated_at = CURRENT_TIMESTAMP AT TIME ZONE 'UTC' WHERE id = $1
     `, id)
 	if err != nil {
-		return err
+		return nil, err
 	}
 
 	_, err = tx.Exec(c, `
@@ -122,10 +158,27 @@ func (cr *ConversationRepository) NewMessage(c context.Context, userId string, i
         WHERE conversation_id = $1 AND left_at IS NOT NULL
 		`, id)
 	if err != nil {
-		return err
+		return nil, err
 	}
 
-	return tx.Commit(c)
+	var message entity.Message
+	err = tx.QueryRow(c, `
+			SELECT m.id, m.sender_id, u.name, m.content, m.created_at, m.is_read, m.conversation_id
+			FROM messages m
+			JOIN users u ON m.sender_id = u.id
+			WHERE m.id = $1
+		`, messageId).
+		Scan(&message.ID, &message.SenderID, &message.SenderName, &message.Content, &message.CreatedAt, &message.IsRead, &message.ConversationId)
+	if err != nil {
+		return nil, err
+	}
+
+	err = tx.Commit(c)
+	if err != nil {
+		return nil, err
+	}
+
+	return &message, nil
 }
 
 func (cr *ConversationRepository) Hide(c context.Context, userId string, id string) error {

@@ -9,14 +9,16 @@ import (
 )
 
 type ConversationService struct {
-	cTimeout time.Duration
-	repo     *repository.ConversationRepository
+	cTimeout         time.Duration
+	repo             *repository.ConversationRepository
+	websocketService *WebsocketService
 }
 
-func NewConversationService(timeout time.Duration, repo *repository.ConversationRepository) *ConversationService {
+func NewConversationService(timeout time.Duration, repo *repository.ConversationRepository, websocketService *WebsocketService) *ConversationService {
 	return &ConversationService{
-		cTimeout: timeout,
-		repo:     repo,
+		cTimeout:         timeout,
+		repo:             repo,
+		websocketService: websocketService,
 	}
 }
 
@@ -34,11 +36,41 @@ func (cs *ConversationService) DeleteMessage(c context.Context, userId string, i
 	return cs.repo.DeleteMessage(c, userId, id)
 }
 
-func (cs *ConversationService) NewMessage(c context.Context, userId string, id string, content string) error {
+func (cs *ConversationService) NewMessage(c context.Context, userId string, id string, content string) (*entity.Message, error) {
 	c, cancel := context.WithTimeout(c, cs.cTimeout)
 	defer cancel()
 
-	return cs.repo.NewMessage(c, userId, id, content)
+	msg, err := cs.repo.NewMessage(c, userId, id, content)
+	if err != nil {
+		return nil, err
+	}
+
+	participants, err := cs.repo.GetParticipants(c, id)
+	if err != nil {
+		return nil, err
+	}
+
+	var wsMsg = entity.Message{
+		ID:             msg.ID,
+		SenderID:       msg.SenderID,
+		SenderName:     msg.SenderName,
+		Content:        msg.Content,
+		CreatedAt:      msg.CreatedAt,
+		IsRead:         msg.IsRead,
+		ConversationId: msg.ConversationId,
+	}
+
+	for _, participant := range participants {
+		if participant.UserId.String() != userId {
+			cs.websocketService.SendToUser(participant.UserId.String(), Message{
+				Type:   "newmsg",
+				UserID: userId,
+				//Data:   wsMsg,
+			})
+		}
+	}
+
+	return msg, nil
 }
 
 func (cs *ConversationService) Hide(c context.Context, userId string, id string) error {

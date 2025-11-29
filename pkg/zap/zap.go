@@ -7,7 +7,7 @@ import (
 )
 
 func InitZap() *zap.Logger {
-	logger, err := zap.NewProduction()
+	logger, err := zap.NewDevelopment()
 	if err != nil {
 		log.Fatalf("Failed to initialize logger: %v", err)
 	}
