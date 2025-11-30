@@ -12,11 +12,11 @@ type Config struct {
 	DB       int
 }
 
-func Conn() (*redis.Client, error) {
+func Conn(config Config) (*redis.Client, error) {
 	rdb := redis.NewClient(&redis.Options{
-		Addr:     "localhost:6379",
-		Password: "",
-		DB:       0,
+		Addr:     config.Host,
+		Password: config.Password,
+		DB:       config.DB,
 	})
 
 	_, err := rdb.Ping(context.Background()).Result()

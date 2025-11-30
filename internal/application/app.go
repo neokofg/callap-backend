@@ -35,7 +35,11 @@ func Run(cfg *config.Config, logger *zap.Logger) {
 		logger.Fatal("failed to connect to database", zap.Error(err))
 	}
 	logger.Info("database connected")
-	rdb, err := redis.Conn()
+	rdb, err := redis.Conn(redis.Config{
+		Host:     cfg.Redis.Host,
+		Password: cfg.Redis.Password,
+		DB:       cfg.Redis.DB,
+	})
 	if err != nil {
 		logger.Fatal("failed to connect to redis", zap.Error(err))
 	}

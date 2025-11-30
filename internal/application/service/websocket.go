@@ -12,7 +12,7 @@ import (
 type Message struct {
 	Type   string `json:"type"`
 	UserID string `json:"user_id"`
-	Data   *any   `json:"data"`
+	Data   any    `json:"data"`
 }
 
 type Hub struct {

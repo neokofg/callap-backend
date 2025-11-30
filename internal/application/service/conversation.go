@@ -65,7 +65,7 @@ func (cs *ConversationService) NewMessage(c context.Context, userId string, id s
 			cs.websocketService.SendToUser(participant.UserId.String(), Message{
 				Type:   "newmsg",
 				UserID: userId,
-				//Data:   wsMsg,
+				Data:   wsMsg,
 			})
 		}
 	}
